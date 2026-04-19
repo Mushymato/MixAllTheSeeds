@@ -5,6 +5,7 @@ using StardewValley;
 using StardewValley.Extensions;
 using StardewValley.GameData.Crops;
 using StardewValley.ItemTypeDefinitions;
+using StardewValley.TerrainFeatures;
 
 namespace MixAllTheSeeds.Features;
 
@@ -13,13 +14,17 @@ public static class ReallyMixedSeeds
     internal static bool CanMix =>
         !ModEntry.config.Enable_ReallyMixedSeeds && !ModEntry.config.Enable_ReallyMixedFlowerSeeds;
 
+    private static readonly MethodInfo HoeDirt_canPlantThisSeedHere = AccessTools.DeclaredMethod(
+        typeof(HoeDirt),
+        nameof(HoeDirt.canPlantThisSeedHere)
+    );
     private static readonly MethodInfo Crop_ResolveSeedId = AccessTools.DeclaredMethod(
         typeof(Crop),
         nameof(Crop.ResolveSeedId)
     );
     private const string IE_ResolveSeed = "ItemExtensions.Patches.CropPatches:ResolveSeedId";
-    private static readonly MethodInfo? CropPatches_ResolveSeedId = AccessTools.DeclaredMethod(IE_ResolveSeed);
-    internal static readonly Func<string, GameLocation, string>? CropPatches_ResolveSeedId_Fn = AccessTools
+    private static readonly MethodInfo? IE_CropPatches_ResolveSeedId = AccessTools.DeclaredMethod(IE_ResolveSeed);
+    internal static readonly Func<string, GameLocation, string>? IE_CropPatches_ResolveSeedId_Fn = AccessTools
         .DeclaredMethod(IE_ResolveSeed)
         ?.CreateDelegate<Func<string, GameLocation, string>>();
     private static int cropHash = -1;
@@ -46,8 +51,19 @@ public static class ReallyMixedSeeds
     {
         ModEntry.Log($"{nameof(ReallyMixedSeeds)}: Enabled", LogLevel.Info);
         ModEntry.harmony.Patch(
-            Crop_ResolveSeedId,
+            original: Crop_ResolveSeedId,
             postfix: new HarmonyMethod(typeof(ReallyMixedSeeds), nameof(Crop_ResolveSeedId_Postfix))
+        );
+        ModEntry.harmony.Patch(
+            original: IE_CropPatches_ResolveSeedId,
+            postfix: new HarmonyMethod(typeof(ReallyMixedSeeds), nameof(Crop_ResolveSeedId_Postfix))
+        );
+        ModEntry.harmony.Patch(
+            original: HoeDirt_canPlantThisSeedHere,
+            prefix: new HarmonyMethod(typeof(ReallyMixedSeeds), nameof(HoeDirt_canPlantThisSeedHere_Prefix))
+            {
+                priority = Priority.First,
+            }
         );
     }
 
@@ -55,6 +71,8 @@ public static class ReallyMixedSeeds
     {
         ModEntry.Log($"{nameof(ReallyMixedSeeds)}: Disabled", LogLevel.Info);
         ModEntry.harmony.Unpatch(Crop_ResolveSeedId, HarmonyPatchType.Postfix, ModEntry.ModId);
+        ModEntry.harmony.Unpatch(IE_CropPatches_ResolveSeedId, HarmonyPatchType.Postfix, ModEntry.ModId);
+        ModEntry.harmony.Unpatch(HoeDirt_canPlantThisSeedHere, HarmonyPatchType.Prefix, ModEntry.ModId);
     }
 
     private static int GetSeedListIndex(bool onlyFlowers, bool anySeason, Season season)
@@ -74,6 +92,17 @@ public static class ReallyMixedSeeds
         if (onlyFlowers)
             idx += 5;
         return idx;
+    }
+
+    private static bool HoeDirt_canPlantThisSeedHere_Prefix(string itemId, ref bool __result)
+    {
+        __result = true;
+        if (itemId == Crop.mixedSeedsId && ModEntry.config.Enable_ReallyMixedSeeds)
+            return false;
+        else if (itemId == "MixedFlowerSeeds" && ModEntry.config.Enable_ReallyMixedFlowerSeeds)
+            return false;
+        __result = false;
+        return true;
     }
 
     private static List<string>[] UpdateCachedSeedLists()

@@ -18,7 +18,7 @@ public sealed class ModEntry : Mod
     private static IMonitor mon = null!;
     internal static IModHelper help = null!;
     internal static ModConfig config = null!;
-    internal static Harmony harmony = null!;
+    internal static readonly Harmony harmony = new(ModId);
 
     public override void Entry(IModHelper helper)
     {
@@ -26,7 +26,6 @@ public sealed class ModEntry : Mod
         mon = Monitor;
         help = helper;
         config = helper.ReadConfig<ModConfig>();
-        harmony = new(ModId);
 
         helper.Events.GameLoop.GameLaunched += OnGameLaunched;
 

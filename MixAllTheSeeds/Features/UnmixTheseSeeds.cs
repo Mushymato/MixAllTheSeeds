@@ -77,11 +77,11 @@ public static class UnmixTheseSeeds
         overrideMinutesUntilReady = null;
         GameLocation location = machine.Location ?? player.currentLocation ?? Utility.getHomeOfFarmer(player);
         string outputSeed = Crop.ResolveSeedId(inputItem.ItemId, machine.Location ?? Game1.currentLocation);
-        if (outputSeed == inputItem.ItemId && ReallyMixedSeeds.CropPatches_ResolveSeedId_Fn != null)
+        if (outputSeed == inputItem.ItemId && ReallyMixedSeeds.IE_CropPatches_ResolveSeedId_Fn != null)
         {
             try
             {
-                outputSeed = ReallyMixedSeeds.CropPatches_ResolveSeedId_Fn(inputItem.ItemId, location);
+                outputSeed = ReallyMixedSeeds.IE_CropPatches_ResolveSeedId_Fn(inputItem.ItemId, location);
             }
             catch
             {
