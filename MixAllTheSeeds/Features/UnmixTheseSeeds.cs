@@ -8,6 +8,9 @@ namespace MixAllTheSeeds.Features;
 
 public static class UnmixTheseSeeds
 {
+    private static IAssetName IE_SeedsAssetName =>
+        field ??= ModEntry.help.GameContent.ParseAssetName("Mods/mistyspring.ItemExtensions/MixedSeeds");
+
     public static void Setup()
     {
         ModEntry.help.Events.Content.AssetRequested += OnAssetRequested;
@@ -33,25 +36,25 @@ public static class UnmixTheseSeeds
         IDictionary<string, MachineData> data = asset.AsDictionary<string, MachineData>().Data;
         if (!data.TryGetValue("(BC)25", out MachineData? seedMaker))
             return;
+        HashSet<string> mixedSeeds = [Crop.mixedSeedsQId, "(O)MixedFlowerSeeds"];
+        if (ModEntry.help.GameContent.DoesAssetExist<dynamic>(IE_SeedsAssetName))
+        {
+            dynamic IE_Seeds = ModEntry.help.GameContent.Load<dynamic>(IE_SeedsAssetName);
+            foreach (string key in IE_Seeds.Keys)
+                mixedSeeds.Add(key);
+        }
         seedMaker.OutputRules.Insert(
             0,
             new MachineOutputRule()
             {
-                Triggers =
-                [
-                    new()
+                Triggers = mixedSeeds
+                    .Select(qId => new MachineOutputTriggerRule()
                     {
-                        Id = "ItemPlacedInMachine_MixedSeed",
+                        Id = $"ItemPlacedInMachine_{qId}",
                         Trigger = MachineOutputTrigger.ItemPlacedInMachine,
-                        RequiredItemId = Crop.mixedSeedsQId,
-                    },
-                    new()
-                    {
-                        Id = "ItemPlacedInMachine_MixedFlowerSeeds",
-                        Trigger = MachineOutputTrigger.ItemPlacedInMachine,
-                        RequiredItemId = "(O)MixedFlowerSeeds",
-                    },
-                ],
+                        RequiredItemId = qId,
+                    })
+                    .ToList(),
                 OutputItem =
                 [
                     new()
@@ -76,7 +79,9 @@ public static class UnmixTheseSeeds
     {
         overrideMinutesUntilReady = null;
         GameLocation location = machine.Location ?? player.currentLocation ?? Utility.getHomeOfFarmer(player);
-        string outputSeed = Crop.ResolveSeedId(inputItem.ItemId, machine.Location ?? Game1.currentLocation);
+        if (location == null)
+            return null;
+        string outputSeed = Crop.ResolveSeedId(inputItem.ItemId, location);
         if (outputSeed == inputItem.ItemId && ReallyMixedSeeds.IE_CropPatches_ResolveSeedId_Fn != null)
         {
             try

@@ -96,12 +96,15 @@ public static class ReallyMixedSeeds
 
     private static bool HoeDirt_canPlantThisSeedHere_Prefix(string itemId, ref bool __result)
     {
+        // reduce amount of mixed seed checking
+        __result = false;
+        if (Game1.didPlayerJustClickAtAll())
+            return true;
         __result = true;
         if (itemId == Crop.mixedSeedsId && ModEntry.config.Enable_ReallyMixedSeeds)
             return false;
         else if (itemId == "MixedFlowerSeeds" && ModEntry.config.Enable_ReallyMixedFlowerSeeds)
             return false;
-        __result = false;
         return true;
     }
 
