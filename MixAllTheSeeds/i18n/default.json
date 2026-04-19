@@ -1,0 +1,9 @@
+{
+  "$schema": "https://smapi.io/schemas/i18n.json",
+  "config.Enable_ReallyMixedSeeds.name": "Enable: Really Mixed Seeds",
+  "config.Enable_ReallyMixedSeeds.desc": "Allow mixed seeds to become any in-season crop.",
+  "config.Enable_ReallyMixedFlowerSeeds.name": "Enable: Really Mixed Flower Seeds",
+  "config.Enable_ReallyMixedFlowerSeeds.desc": "Allow mixed flower seeds to become any in-season flower.",
+  "config.Enable_SeedMakerUnmixes.name": "Enable: Seed Maker Unmixes Seeds",
+  "config.Enable_SeedMakerUnmixes.desc": "Mixed seeds and mixed flower seeds can be unmixed by the seed maker"
+}
