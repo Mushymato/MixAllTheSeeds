@@ -1,3 +1,4 @@
+global using SObject = StardewValley.Object;
 using System.Diagnostics;
 using HarmonyLib;
 using MixAllTheSeeds.Features;

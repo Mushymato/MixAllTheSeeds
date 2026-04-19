@@ -2,7 +2,6 @@ using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.GameData.Machines;
-using SObject = StardewValley.Object;
 
 namespace MixAllTheSeeds.Features;
 
