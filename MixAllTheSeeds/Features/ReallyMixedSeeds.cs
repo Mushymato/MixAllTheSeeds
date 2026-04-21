@@ -44,7 +44,7 @@ public static class ReallyMixedSeeds
         if (CanMix)
         {
             cachedSeedLists = null;
-            hoeDirtSeedCtx.Value.Reset();
+            hoeDirtRef.Value.SetTarget(null);
             Unpatch();
             return;
         }
@@ -100,23 +100,8 @@ public static class ReallyMixedSeeds
         return idx;
     }
 
-    private sealed class HoeDirtSeedCtx
-    {
-        internal int fromTick = -1;
-        internal WeakReference<HoeDirt?> hoeDirtRef = new(null);
-        internal string? checkedSeed = null;
-        internal string? nextSeed = null;
-
-        internal void Reset()
-        {
-            hoeDirtRef.SetTarget(null);
-            checkedSeed = null;
-            nextSeed = null;
-        }
-    }
-
     // yearns for the tick cache
-    private static readonly PerScreen<HoeDirtSeedCtx> hoeDirtSeedCtx = new(() => new());
+    private static readonly PerScreen<WeakReference<HoeDirt?>> hoeDirtRef = new(() => new(null));
 
     private static bool HoeDirt_canPlantThisSeedHere_Prefix(HoeDirt __instance, string itemId, ref bool __result)
     {
@@ -125,10 +110,7 @@ public static class ReallyMixedSeeds
             || (ModEntry.config.Enable_ReallyMixedFlowerSeeds && itemId == "MixedFlowerSeeds");
         if (isMixedSeed)
         {
-            HoeDirtSeedCtx ctx = hoeDirtSeedCtx.Value;
-            ctx.fromTick = Game1.ticks;
-            ctx.hoeDirtRef.SetTarget(__instance);
-            ctx.checkedSeed = itemId;
+            hoeDirtRef.Value.SetTarget(__instance);
         }
         // reduce amount of mixed seed checking by assuming can plant
         if (Game1.didPlayerJustClickAtAll())
@@ -210,8 +192,6 @@ public static class ReallyMixedSeeds
             return;
 
         bool onlyFlowers;
-        HoeDirtSeedCtx ctx = hoeDirtSeedCtx.Value;
-        bool ctxMatches = ctx.fromTick == Game1.ticks && ctx.checkedSeed == itemId;
 
         if (itemId == Crop.mixedSeedsId && ModEntry.config.Enable_ReallyMixedSeeds)
         {
@@ -226,27 +206,11 @@ public static class ReallyMixedSeeds
             return;
         }
 
-        if (ctxMatches)
-        {
-            if (ctx.nextSeed != null)
-            {
-                __result = ctx.nextSeed;
-                ctx.Reset();
-                return;
-            }
-        }
-        else if (ctx.checkedSeed != null)
-        {
-            ModEntry.LogDebug(
-                $"HoeDirtSeedCtx mismatch: {ctx.checkedSeed} != {itemId}, {ctx.fromTick} != {Game1.ticks}"
-            );
-        }
-
         List<string> matchingSeeds = GetCachedSeedList(location, onlyFlowers);
         if (!matchingSeeds.Any())
             return;
         bool hasDirt = false;
-        if (ctx.hoeDirtRef.TryGetTarget(out HoeDirt? hoeDirt) && hoeDirt != null && hoeDirt.Location == location)
+        if (hoeDirtRef.Value.TryGetTarget(out HoeDirt? hoeDirt) && hoeDirt != null && hoeDirt.Location == location)
         {
             hasDirt = true;
             Point tilePoint = hoeDirt.Tile.ToPoint();
@@ -259,6 +223,7 @@ public static class ReallyMixedSeeds
             Random.Shared.ShuffleInPlace(matchingSeeds);
             foreach (string randSeed in matchingSeeds)
             {
+                ModEntry.Log($"{Game1.ticks} Checking '{randSeed}'");
                 if (!Game1.cropData.TryGetValue(randSeed, out CropData? cropData))
                     continue;
                 if (playerIntersectsTile && cropData.IsRaised)
@@ -274,11 +239,7 @@ public static class ReallyMixedSeeds
             __result = Random.Shared.ChooseFrom(matchingSeeds);
         }
 
-        ModEntry.LogDebug(
-            $"{Game1.ticks} {nameof(ReallyMixedSeeds)}({hasDirt}): '{itemId}' -> '{__result}'"
-        );
-        ctx.checkedSeed = itemId;
-        ctx.nextSeed = __result;
+        ModEntry.Log($"{Game1.ticks} {nameof(ReallyMixedSeeds)}({hasDirt}): '{itemId}' -> '{__result}'");
         return;
     }
 }

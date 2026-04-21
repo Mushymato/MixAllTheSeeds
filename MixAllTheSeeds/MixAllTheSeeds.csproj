@@ -19,7 +19,7 @@
     <Description>Mixed seeds improvements</Description>
     <UniqueId>mushymato.MixAllTheSeeds</UniqueId>
     <UpdateKeys>Nexus:???,GitHub:Mushymato/MixAllTheSeeds</UpdateKeys>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <BaseManifest>new</BaseManifest>
     <MinimumApiVersion_Behavior>Update</MinimumApiVersion_Behavior>
     <MinimumGameVersion_Behavior>UpdateFull</MinimumGameVersion_Behavior>
