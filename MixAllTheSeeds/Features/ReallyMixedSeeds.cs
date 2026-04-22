@@ -30,6 +30,11 @@ public static class ReallyMixedSeeds
     internal static readonly Func<string, GameLocation, string>? IE_CropPatches_ResolveSeedId_Fn = AccessTools
         .DeclaredMethod(IE_ResolveSeed)
         ?.CreateDelegate<Func<string, GameLocation, string>>();
+
+    private static readonly MethodInfo? Tractor_TryGetHoeDirt = AccessTools.DeclaredMethod(
+        "Pathoschild.Stardew.TractorMod.Framework.Attachments.BaseAttachment:TryGetHoeDirt"
+    );
+
     private static int cropHash = -1;
     private static int objHash = -1;
     private static List<string>[]? cachedSeedLists = null;
@@ -66,10 +71,21 @@ public static class ReallyMixedSeeds
             postfix: new HarmonyMethod(typeof(ReallyMixedSeeds), nameof(Crop_ResolveSeedId_Postfix))
         );
         if (IE_CropPatches_ResolveSeedId != null)
+        {
+            ModEntry.Log($"Patch ItemExtensions: {IE_CropPatches_ResolveSeedId}");
             ModEntry.harmony.Patch(
                 original: IE_CropPatches_ResolveSeedId,
                 postfix: new HarmonyMethod(typeof(ReallyMixedSeeds), nameof(Crop_ResolveSeedId_Postfix))
             );
+        }
+        if (Tractor_TryGetHoeDirt != null)
+        {
+            ModEntry.Log($"Patch TractorMod: {Tractor_TryGetHoeDirt}");
+            ModEntry.harmony.Patch(
+                original: Tractor_TryGetHoeDirt,
+                postfix: new HarmonyMethod(typeof(ReallyMixedSeeds), nameof(Tractor_TryGetHoeDirt_Postfix))
+            );
+        }
     }
 
     private static void Unpatch()
@@ -78,7 +94,15 @@ public static class ReallyMixedSeeds
         ModEntry.harmony.Unpatch(HoeDirt_canPlantThisSeedHere, HarmonyPatchType.Prefix, ModEntry.ModId);
         ModEntry.harmony.Unpatch(Crop_ResolveSeedId, HarmonyPatchType.Postfix, ModEntry.ModId);
         if (IE_CropPatches_ResolveSeedId != null)
+        {
+            ModEntry.Log($"Unpatch {IE_CropPatches_ResolveSeedId}");
             ModEntry.harmony.Unpatch(IE_CropPatches_ResolveSeedId, HarmonyPatchType.Postfix, ModEntry.ModId);
+        }
+        if (Tractor_TryGetHoeDirt != null)
+        {
+            ModEntry.Log($"Patch TractorMod: {Tractor_TryGetHoeDirt}");
+            ModEntry.harmony.Unpatch(original: Tractor_TryGetHoeDirt, HarmonyPatchType.Postfix, ModEntry.ModId);
+        }
     }
 
     private static int GetSeedListIndex(bool onlyFlowers, bool anySeason, Season season)
@@ -108,10 +132,7 @@ public static class ReallyMixedSeeds
         bool isMixedSeed =
             (ModEntry.config.Enable_ReallyMixedSeeds && itemId == Crop.mixedSeedsId)
             || (ModEntry.config.Enable_ReallyMixedFlowerSeeds && itemId == "MixedFlowerSeeds");
-        if (isMixedSeed)
-        {
-            hoeDirtRef.Value.SetTarget(__instance);
-        }
+        hoeDirtRef.Value.SetTarget(__instance);
         // reduce amount of mixed seed checking by assuming can plant
         if (Game1.didPlayerJustClickAtAll())
             return true;
@@ -120,6 +141,11 @@ public static class ReallyMixedSeeds
         GameLocation? location = __instance.Location;
         __result = location != null && (!location.IsOutdoors || (location.GetData()?.CanPlantHere ?? location.IsFarm));
         return false;
+    }
+
+    private static void Tractor_TryGetHoeDirt_Postfix(ref HoeDirt? dirt)
+    {
+        hoeDirtRef.Value.SetTarget(dirt);
     }
 
     private static List<string>[] UpdateCachedSeedLists()

@@ -24,7 +24,7 @@ public static class UnmixTheseSeeds
     {
         if (e.NameWithoutLocale.IsEquivalentTo("Data\\Machines"))
         {
-            e.Edit(Edit_Machines, AssetEditPriority.Default);
+            e.Edit(Edit_Machines, AssetEditPriority.Late);
         }
     }
 
@@ -33,8 +33,6 @@ public static class UnmixTheseSeeds
         if (!ModEntry.config.Enable_SeedMakerUnmixes)
             return;
         IDictionary<string, MachineData> data = asset.AsDictionary<string, MachineData>().Data;
-        if (!data.TryGetValue("(BC)25", out MachineData? seedMaker))
-            return;
         HashSet<string> mixedSeeds = [Crop.mixedSeedsQId, "(O)MixedFlowerSeeds"];
         if (ModEntry.help.GameContent.DoesAssetExist<dynamic>(IE_SeedsAssetName))
         {
@@ -42,29 +40,52 @@ public static class UnmixTheseSeeds
             foreach (string key in IE_Seeds.Keys)
                 mixedSeeds.Add(key);
         }
-        seedMaker.OutputRules.Insert(
-            0,
-            new MachineOutputRule()
+        foreach ((string key, MachineData machineData) in data)
+        {
+            if (machineData.OutputRules == null)
+                continue;
+            bool isSeedMaker = false;
+            foreach (MachineOutputRule rule in machineData.OutputRules)
             {
-                Triggers = mixedSeeds
-                    .Select(qId => new MachineOutputTriggerRule()
+                if (rule.OutputItem == null)
+                    continue;
+                foreach (MachineItemOutput output in rule.OutputItem)
+                {
+                    if (output.OutputMethod?.Contains("OutputSeedMaker") ?? false)
                     {
-                        Id = $"ItemPlacedInMachine_{qId}",
-                        Trigger = MachineOutputTrigger.ItemPlacedInMachine,
-                        RequiredItemId = qId,
-                    })
-                    .ToList(),
-                OutputItem =
-                [
-                    new()
-                    {
-                        Id = $"{ModEntry.ModId}_Unmix",
-                        OutputMethod = $"{typeof(UnmixTheseSeeds).AssemblyQualifiedName}:{nameof(OutputUnmixSeeds)}",
-                    },
-                ],
-                MinutesUntilReady = 10,
+                        isSeedMaker = true;
+                        break;
+                    }
+                }
             }
-        );
+            if (!isSeedMaker)
+                continue;
+            ModEntry.Log($"SeedMaker: {key}");
+            machineData.OutputRules.Insert(
+                0,
+                new MachineOutputRule()
+                {
+                    Triggers = mixedSeeds
+                        .Select(qId => new MachineOutputTriggerRule()
+                        {
+                            Id = $"ItemPlacedInMachine_{qId}",
+                            Trigger = MachineOutputTrigger.ItemPlacedInMachine,
+                            RequiredItemId = qId,
+                        })
+                        .ToList(),
+                    OutputItem =
+                    [
+                        new()
+                        {
+                            Id = $"{ModEntry.ModId}_Unmix",
+                            OutputMethod =
+                                $"{typeof(UnmixTheseSeeds).AssemblyQualifiedName}:{nameof(OutputUnmixSeeds)}",
+                        },
+                    ],
+                    MinutesUntilReady = 10,
+                }
+            );
+        }
     }
 
     public static Item? OutputUnmixSeeds(
