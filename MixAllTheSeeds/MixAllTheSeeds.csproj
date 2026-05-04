@@ -18,7 +18,7 @@
     <Authors>mushymato</Authors>
     <Description>Mixed seeds improvements</Description>
     <UniqueId>mushymato.MixAllTheSeeds</UniqueId>
-    <UpdateKeys>Nexus:???,GitHub:Mushymato/MixAllTheSeeds</UpdateKeys>
+    <UpdateKeys>Nexus:44365,GitHub:Mushymato/MixAllTheSeeds</UpdateKeys>
     <Version>0.3.0</Version>
     <BaseManifest>new</BaseManifest>
     <MinimumApiVersion_Behavior>Update</MinimumApiVersion_Behavior>
