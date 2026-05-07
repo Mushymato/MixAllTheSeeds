@@ -2,10 +2,12 @@ using System.Reflection;
 using HarmonyLib;
 using Microsoft.Xna.Framework;
 using StardewModdingAPI;
+using StardewModdingAPI.Events;
 using StardewModdingAPI.Utilities;
 using StardewValley;
 using StardewValley.Extensions;
 using StardewValley.GameData.Crops;
+using StardewValley.Internal;
 using StardewValley.ItemTypeDefinitions;
 using StardewValley.Objects;
 using StardewValley.TerrainFeatures;
@@ -38,6 +40,7 @@ public static class ReallyMixedSeeds
     private static int cropHash = -1;
     private static int objHash = -1;
     private static List<string>[]? cachedSeedLists = null;
+    private static HashSet<string>? nonRareSeeds = null;
 
     public static void Setup()
     {
@@ -49,11 +52,37 @@ public static class ReallyMixedSeeds
         if (CanMix)
         {
             cachedSeedLists = null;
+            nonRareSeeds = null;
             hoeDirtRef.Value.SetTarget(null);
+            ModEntry.help.Events.GameLoop.DayStarted -= OnDayStarted;
             Unpatch();
             return;
         }
+        ModEntry.help.Events.GameLoop.DayStarted += OnDayStarted;
         Patch();
+    }
+
+    private static void OnDayStarted(object? sender, DayStartedEventArgs e)
+    {
+        UpdateNonRareSeedList();
+    }
+
+    public static void UpdateNonRareSeedList()
+    {
+        if (!ModEntry.config.Mix_ExcludeRare)
+        {
+            nonRareSeeds = null;
+            return;
+        }
+        nonRareSeeds = [];
+        foreach (
+            ISalable salable in ShopBuilder.GetShopStock("SeedShop").Keys.Concat(ShopBuilder.GetShopStock("Joja").Keys)
+        )
+        {
+            if (salable is SObject obj && Game1.cropData.ContainsKey(obj.ItemId))
+                nonRareSeeds.Add(obj.ItemId);
+        }
+        ModEntry.Log(string.Join(',', nonRareSeeds));
     }
 
     private static void Patch()
@@ -95,12 +124,12 @@ public static class ReallyMixedSeeds
         ModEntry.harmony.Unpatch(Crop_ResolveSeedId, HarmonyPatchType.Postfix, ModEntry.ModId);
         if (IE_CropPatches_ResolveSeedId != null)
         {
-            ModEntry.Log($"Unpatch {IE_CropPatches_ResolveSeedId}");
+            ModEntry.Log($"Unpatch ItemExtensions: {IE_CropPatches_ResolveSeedId}");
             ModEntry.harmony.Unpatch(IE_CropPatches_ResolveSeedId, HarmonyPatchType.Postfix, ModEntry.ModId);
         }
         if (Tractor_TryGetHoeDirt != null)
         {
-            ModEntry.Log($"Patch TractorMod: {Tractor_TryGetHoeDirt}");
+            ModEntry.Log($"Unpatch TractorMod: {Tractor_TryGetHoeDirt}");
             ModEntry.harmony.Unpatch(original: Tractor_TryGetHoeDirt, HarmonyPatchType.Postfix, ModEntry.ModId);
         }
     }
@@ -235,10 +264,8 @@ public static class ReallyMixedSeeds
         List<string> matchingSeeds = GetCachedSeedList(location, onlyFlowers);
         if (!matchingSeeds.Any())
             return;
-        bool hasDirt = false;
         if (hoeDirtRef.Value.TryGetTarget(out HoeDirt? hoeDirt) && hoeDirt != null && hoeDirt.Location == location)
         {
-            hasDirt = true;
             Point tilePoint = hoeDirt.Tile.ToPoint();
             bool isGardenPot = location.objects.TryGetValue(hoeDirt.Tile, out SObject obj) && obj is IndoorPot;
             bool playerIntersectsTile = Utility.doesRectangleIntersectTile(
@@ -249,10 +276,13 @@ public static class ReallyMixedSeeds
             Random.Shared.ShuffleInPlace(matchingSeeds);
             foreach (string randSeed in matchingSeeds)
             {
-                ModEntry.Log($"{Game1.ticks} Checking '{randSeed}'");
                 if (!Game1.cropData.TryGetValue(randSeed, out CropData? cropData))
                     continue;
                 if (playerIntersectsTile && cropData.IsRaised)
+                    continue;
+                if (ModEntry.config.Mix_ExcludeRegrowing && cropData.RegrowDays > 0)
+                    continue;
+                if (nonRareSeeds != null && !nonRareSeeds.Contains(randSeed))
                     continue;
                 if (!location.CanPlantSeedsHere(randSeed, tilePoint.X, tilePoint.Y, isGardenPot, out _))
                     continue;
@@ -264,8 +294,6 @@ public static class ReallyMixedSeeds
         {
             __result = Random.Shared.ChooseFrom(matchingSeeds);
         }
-
-        ModEntry.Log($"{Game1.ticks} {nameof(ReallyMixedSeeds)}({hasDirt}): '{itemId}' -> '{__result}'");
         return;
     }
 }

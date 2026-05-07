@@ -8,12 +8,16 @@ public sealed class ModConfig
 {
     public bool Enable_ReallyMixedSeeds { get; set; } = true;
     public bool Enable_ReallyMixedFlowerSeeds { get; set; } = true;
+    public bool Mix_ExcludeRegrowing { get; set; } = false;
+    public bool Mix_ExcludeRare { get; set; } = false;
     public bool Enable_SeedMakerUnmixes { get; set; } = true;
 
     public void Reset()
     {
         Enable_ReallyMixedSeeds = true;
         Enable_ReallyMixedFlowerSeeds = true;
+        Mix_ExcludeRegrowing = false;
+        Mix_ExcludeRare = false;
         Enable_SeedMakerUnmixes = true;
     }
 
@@ -59,6 +63,26 @@ public sealed class ModConfig
             },
             I18n.Config_EnableReallyMixedFlowerSeeds_Name,
             I18n.Config_EnableReallyMixedFlowerSeeds_Desc
+        );
+        gmcm.AddBoolOption(
+            mod,
+            () => Mix_ExcludeRegrowing,
+            (value) => Mix_ExcludeRegrowing = value,
+            I18n.Config_MixExcludeRegrowing_Name,
+            I18n.Config_MixExcludeRegrowing_Desc
+        );
+        gmcm.AddBoolOption(
+            mod,
+            () => Mix_ExcludeRare,
+            (value) =>
+            {
+                bool checkBefore = Mix_ExcludeRare;
+                Mix_ExcludeRare = value;
+                if (checkBefore != Mix_ExcludeRare)
+                    ReallyMixedSeeds.UpdateNonRareSeedList();
+            },
+            I18n.Config_MixExcludeRare_Name,
+            I18n.Config_MixExcludeRare_Desc
         );
         gmcm.AddBoolOption(
             mod,
