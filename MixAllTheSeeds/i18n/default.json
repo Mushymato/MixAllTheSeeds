@@ -4,10 +4,10 @@
   "config.Enable_ReallyMixedSeeds.desc": "Allow mixed seeds to become any in-season crop.",
   "config.Enable_ReallyMixedFlowerSeeds.name": "Enable: Really Mixed Flower Seeds",
   "config.Enable_ReallyMixedFlowerSeeds.desc": "Allow mixed flower seeds to become any in-season flower.",
-  "config.Enable_SeedMakerUnmixes.name": "Enable: Seed Maker Unmixes Seeds",
   "config.Mix_ExcludeRegrowing.name": "Mixed: Exclude Regrowing Crops",
   "config.Mix_ExcludeRegrowing.desc": "Exclude any crops that regrow from mixed seeds/mixed flower seeds.",
   "config.Mix_ExcludeRare.name": "Mixed: Exclude Rare Crops",
   "config.Mix_ExcludeRare.desc": "Exclude any crops that can't be bought from Pierre or Joja from mixed seeds/mixed flower seeds.",
+  "config.Enable_SeedMakerUnmixes.name": "Enable: Seed Maker Unmixes Seeds",
   "config.Enable_SeedMakerUnmixes.desc": "Mixed seeds and mixed flower seeds can be unmixed by the seed maker"
 }
