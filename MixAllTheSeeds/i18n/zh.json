@@ -6,6 +6,8 @@
   "config.Enable_ReallyMixedFlowerSeeds.desc": "混合花卉种子可种出任意符合当季的花朵农作物",
   "config.Mix_ExcludeRegrowing.name": "混合：排除可重新生长农作物",
   "config.Mix_ExcludeRegrowing.desc": "混合种子/混合花卉种子不会种出任何可重新生长的农作物",
+  "config.Mix_ExcludeRaised.name": "混合：排除稀有农作物",
+  "config.Mix_ExcludeRaised.desc": "混合种子/混合花卉种子不会种出任何不可穿过的农作物",
   "config.Mix_ExcludeRare.name": "混合：排除稀有农作物",
   "config.Mix_ExcludeRare.desc": "混合种子/混合花卉种子不会种出任何在皮埃尔杂货店和Joja超市买不到的种子",
   "config.Enable_SeedMakerUnmixes.name": "启用：用种子生产器分类混合种子",

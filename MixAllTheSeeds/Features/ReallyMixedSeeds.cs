@@ -268,17 +268,15 @@ public static class ReallyMixedSeeds
         {
             Point tilePoint = hoeDirt.Tile.ToPoint();
             bool isGardenPot = location.objects.TryGetValue(hoeDirt.Tile, out SObject obj) && obj is IndoorPot;
-            bool playerIntersectsTile = Utility.doesRectangleIntersectTile(
-                Game1.player.GetBoundingBox(),
-                tilePoint.X,
-                tilePoint.Y
-            );
+            bool skipRaisedCrop =
+                ModEntry.config.Mix_ExcludeRaised
+                || Utility.doesRectangleIntersectTile(Game1.player.GetBoundingBox(), tilePoint.X, tilePoint.Y);
             Random.Shared.ShuffleInPlace(matchingSeeds);
             foreach (string randSeed in matchingSeeds)
             {
                 if (!Game1.cropData.TryGetValue(randSeed, out CropData? cropData))
                     continue;
-                if (playerIntersectsTile && cropData.IsRaised)
+                if (skipRaisedCrop && cropData.IsRaised)
                     continue;
                 if (ModEntry.config.Mix_ExcludeRegrowing && cropData.RegrowDays > 0)
                     continue;

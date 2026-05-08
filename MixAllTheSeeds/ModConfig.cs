@@ -10,6 +10,7 @@ public sealed class ModConfig
     public bool Enable_ReallyMixedFlowerSeeds { get; set; } = true;
     public bool Mix_ExcludeRegrowing { get; set; } = false;
     public bool Mix_ExcludeRare { get; set; } = false;
+    public bool Mix_ExcludeRaised { get; set; } = false;
     public bool Enable_SeedMakerUnmixes { get; set; } = true;
 
     public void Reset()
@@ -18,6 +19,7 @@ public sealed class ModConfig
         Enable_ReallyMixedFlowerSeeds = true;
         Mix_ExcludeRegrowing = false;
         Mix_ExcludeRare = false;
+        Mix_ExcludeRaised = false;
         Enable_SeedMakerUnmixes = true;
     }
 
@@ -70,6 +72,13 @@ public sealed class ModConfig
             (value) => Mix_ExcludeRegrowing = value,
             I18n.Config_MixExcludeRegrowing_Name,
             I18n.Config_MixExcludeRegrowing_Desc
+        );
+        gmcm.AddBoolOption(
+            mod,
+            () => Mix_ExcludeRaised,
+            (value) => Mix_ExcludeRaised = value,
+            I18n.Config_MixExcludeRaised_Name,
+            I18n.Config_MixExcludeRaised_Desc
         );
         gmcm.AddBoolOption(
             mod,
