@@ -32,6 +32,8 @@ public sealed class ModEntry : Mod
 
         ReallyMixedSeeds.Setup();
         UnmixTheseSeeds.Setup();
+
+        help.ConsoleCommands.Add("mats-seedlists", "Show seed lists", ReallyMixedSeeds.ConsoleShowSeedList);
     }
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)

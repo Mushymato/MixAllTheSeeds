@@ -49,6 +49,22 @@ public static class ReallyMixedSeeds
         Toggle_Mixed();
     }
 
+    internal static void ConsoleShowSeedList(string arg1, string[] arg2)
+    {
+        cachedSeedLists ??= UpdateCachedSeedLists();
+        ModEntry.Log(
+            $"Seeds:\n - {string.Join("\n - ", cachedSeedLists.Select(lst => string.Join(", ", lst)))}",
+            LogLevel.Info
+        );
+        if (ModEntry.config.Mix_ExcludeRare)
+        {
+            if (nonRareSeeds == null)
+                UpdateNonRareSeedList();
+            if (nonRareSeeds != null)
+                ModEntry.Log($"Non-Rare Seeds:\n{string.Join("\n", nonRareSeeds)}", LogLevel.Info);
+        }
+    }
+
     public static void Toggle_Mixed()
     {
         if (CanMix)
