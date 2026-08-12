@@ -16,6 +16,8 @@ namespace MixAllTheSeeds.Features;
 
 public static class ReallyMixedSeeds
 {
+    private const string CustomField_NoMix = $"{ModEntry.ModId}/NoMix";
+
     internal static bool CanMix =>
         !ModEntry.config.Enable_ReallyMixedSeeds && !ModEntry.config.Enable_ReallyMixedFlowerSeeds;
 
@@ -67,6 +69,15 @@ public static class ReallyMixedSeeds
         UpdateNonRareSeedList();
     }
 
+    public static bool IsNoMix(CropData cropData)
+    {
+        if (cropData.CustomFields?.TryGetValue(CustomField_NoMix, out string? noMix) ?? false)
+        {
+            return !string.IsNullOrEmpty(noMix);
+        }
+        return false;
+    }
+
     public static void UpdateNonRareSeedList()
     {
         if (!ModEntry.config.Mix_ExcludeRare)
@@ -79,7 +90,11 @@ public static class ReallyMixedSeeds
             ISalable salable in ShopBuilder.GetShopStock("SeedShop").Keys.Concat(ShopBuilder.GetShopStock("Joja").Keys)
         )
         {
-            if (salable is SObject obj && Game1.cropData.ContainsKey(obj.ItemId))
+            if (
+                salable is SObject obj
+                && Game1.cropData.TryGetValue(obj.ItemId, out CropData? cropData)
+                && !IsNoMix(cropData)
+            )
                 nonRareSeeds.Add(obj.ItemId);
         }
         ModEntry.Log(string.Join(',', nonRareSeeds));
@@ -207,6 +222,8 @@ public static class ReallyMixedSeeds
                 if (!(cropData.Seasons?.Any() ?? false))
                     continue;
                 if (string.IsNullOrEmpty(cropData.HarvestItemId))
+                    continue;
+                if (IsNoMix(cropData))
                     continue;
                 ParsedItemData parsedItemData = ItemRegistry.GetData(cropData.HarvestItemId);
                 bool onlyFlowers = parsedItemData.Category == SObject.flowersCategory;
