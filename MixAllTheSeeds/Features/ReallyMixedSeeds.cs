@@ -51,7 +51,7 @@ public static class ReallyMixedSeeds
 
     internal static void ConsoleShowSeedList(string arg1, string[] arg2)
     {
-        cachedSeedLists ??= UpdateCachedSeedLists();
+        cachedSeedLists = UpdateCachedSeedLists();
         ModEntry.Log(
             $"Seeds:\n - {string.Join("\n - ", cachedSeedLists.Select(lst => string.Join(", ", lst)))}",
             LogLevel.Info
