@@ -235,13 +235,15 @@ public static class ReallyMixedSeeds
             ];
             foreach ((string seedId, CropData cropData) in Game1.cropData)
             {
-                if (!(cropData.Seasons?.Any() ?? false))
-                    continue;
-                if (string.IsNullOrEmpty(cropData.HarvestItemId))
+                if (cropData.Seasons == null || !cropData.Seasons.Any())
                     continue;
                 if (IsNoMix(cropData))
                     continue;
-                ParsedItemData parsedItemData = ItemRegistry.GetData(cropData.HarvestItemId);
+                if (
+                    string.IsNullOrEmpty(cropData.HarvestItemId)
+                    || ItemRegistry.GetData(cropData.HarvestItemId) is not ParsedItemData parsedItemData
+                )
+                    continue;
                 bool onlyFlowers = parsedItemData.Category == SObject.flowersCategory;
                 foreach (Season cropSeason in cropData.Seasons)
                 {
